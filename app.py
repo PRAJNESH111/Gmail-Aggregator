@@ -199,15 +199,17 @@ def latest():
     return jsonify(data)
 
 if __name__ == "__main__":
-  import os
-  port = int(os.environ.get('PORT', 5000))
-  debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-  
-  if debug:
-    # Development mode with SSL
+ import os
+
+port = int(os.environ.get('PORT', 5000))
+debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+render_env = os.environ.get('RENDER', 'False').lower() == 'true'
+
+if debug and not render_env:
+    # Local development mode with SSL
     app.run(port=port, debug=True, ssl_context=('cert.pem', 'key.pem'))
-  else:
-    # Production mode
+else:
+    # Production mode (Render or other hosts)
     app.run(host='0.0.0.0', port=port, debug=False)
 
 
