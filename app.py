@@ -30,7 +30,7 @@ def get_oauth_credentials():
                 "client_secret": client_secret,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": "https://gmail-aggregator.onrender.com/oauth2callback"
+                "redirect_uris": "https://gmail-aggregator.onrender.com"
             }
         }
         return credentials
