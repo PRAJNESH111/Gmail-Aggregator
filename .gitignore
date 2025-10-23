@@ -44,3 +44,6 @@ logs/
 # Tokens (keep this for security)
 tokens/*.json
 !tokens/.gitkeep
+
+# OAuth credentials
+credentials.json
