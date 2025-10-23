@@ -7,6 +7,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from gmail_client import SCOPES
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 TOKENS_DIR = Path("tokens")
 TOKENS_DIR.mkdir(exist_ok=True)
