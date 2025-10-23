@@ -1,0 +1,2 @@
+# This file ensures the tokens directory is created in git
+# but the actual token files are ignored for security
