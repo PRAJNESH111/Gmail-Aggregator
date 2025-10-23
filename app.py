@@ -1,4 +1,4 @@
-import glob, os
+import glob, os, json
 from flask import Flask, jsonify, request, send_file, redirect
 from flask_cors import CORS
 from gmail_client import build_service_from_token, fetch_unread, get_account_email
@@ -11,6 +11,32 @@ from pathlib import Path
 TOKENS_DIR = Path("tokens")
 TOKENS_DIR.mkdir(exist_ok=True)
 
+def get_oauth_credentials():
+    """Get OAuth credentials from environment variables or credentials.json file"""
+    # Try environment variables first (for production)
+    client_id = os.environ.get('GOOGLE_CLIENT_ID')
+    client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
+    redirect_uri = os.environ.get('GOOGLE_REDIRECT_URI')
+    
+    if client_id and client_secret and redirect_uri:
+        # Create credentials dict from environment variables
+        credentials = {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [redirect_uri]
+            }
+        }
+        return credentials
+    else:
+        # Fallback to credentials.json file (for development)
+        if os.path.exists("credentials.json"):
+            with open("credentials.json", "r") as f:
+                return json.load(f)
+        else:
+            raise FileNotFoundError("No OAuth credentials found. Please set environment variables or add credentials.json file.")
 
 app = Flask(__name__)
 CORS(app)
@@ -71,16 +97,21 @@ def index():
 # --- Route for adding a new user ---
 @app.route("/add_user")
 def add_user():
-    flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-    flow.redirect_uri = request.url_root + "oauth2callback"
-    authorization_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
-    return redirect(authorization_url)
+    try:
+        credentials = get_oauth_credentials()
+        flow = InstalledAppFlow.from_client_config(credentials, SCOPES)
+        flow.redirect_uri = request.url_root + "oauth2callback"
+        authorization_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
+        return redirect(authorization_url)
+    except Exception as e:
+        return f"""<p>Error setting up OAuth: {e}</p><p><a href='/'>Go to homepage</a></p>"""
 
 # --- Route for OAuth2 callback ---
 @app.route("/oauth2callback")
 def oauth2callback():
     try:
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+        credentials = get_oauth_credentials()
+        flow = InstalledAppFlow.from_client_config(credentials, SCOPES)
         flow.redirect_uri = request.url_root + "oauth2callback"
         authorization_response = request.url
         flow.fetch_token(authorization_response=authorization_response)

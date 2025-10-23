@@ -9,6 +9,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+credentials.json
+
 
 # Flask
 instance/
@@ -23,6 +25,7 @@ instance/
 .env
 .env.local
 .env.production
+.env.*
 
 # IDE
 .vscode/

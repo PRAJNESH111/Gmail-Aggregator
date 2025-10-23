@@ -10,4 +10,10 @@ services:
         value: production
       - key: FLASK_DEBUG
         value: false
+      - key: GOOGLE_CLIENT_ID
+        value: your_google_client_id_here
+      - key: GOOGLE_CLIENT_SECRET
+        value: your_google_client_secret_here
+      - key: GOOGLE_REDIRECT_URI
+        value: https://your-app-name.onrender.com/oauth2callback
     healthCheckPath: /
