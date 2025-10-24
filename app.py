@@ -129,20 +129,18 @@ def add_user():
         return f"<p>Error setting up OAuth: {e}</p><p><a href='/'>Go to homepage</a></p>"
 
 # --- Route for OAuth2 callback ---
+# /oauth2callback
 @app.route("/oauth2callback")
 def oauth2callback():
     try:
         credentials = get_oauth_credentials()
         flow = InstalledAppFlow.from_client_config(credentials, SCOPES)
-
         redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
-        if not redirect_uri:
-            return "<p>GOOGLE_REDIRECT_URI not set</p>", 500
-
         flow.redirect_uri = redirect_uri
-        print("CALLBACK - using flow.redirect_uri:", flow.redirect_uri)
+        print("CALLBACK - flow.redirect_uri:", flow.redirect_uri)
         print("CALLBACK - request.url:", request.url)
-        print("CALLBACK - X-Forwarded-Proto:", request.headers.get("X-Forwarded-Proto"))
+        print("CALLBACK - request.headers X-Forwarded-Proto:", request.headers.get("X-Forwarded-Proto"))
+        print("CALLBACK - client_id used:", credentials["web"]["client_id"])
 
         authorization_response = request.url
         flow.fetch_token(authorization_response=authorization_response)
@@ -152,11 +150,17 @@ def oauth2callback():
         email_addr = service.users().getProfile(userId="me").execute()["emailAddress"]
 
         token_path = TOKENS_DIR / f"{email_addr}.json"
+        print("CALLBACK - Saving token to:", token_path)
         with open(token_path, "w") as f:
             f.write(creds.to_json())
-
+        print("CALLBACK - Saved tokens files:", [p.name for p in TOKENS_DIR.glob("*.json")])
         return f"<p>Successfully added account: {email_addr}</p><p><a href='/'>Go to homepage</a></p>"
     except Exception as e:
+        import traceback; traceback.print_exc()
+        try:
+            print("CALLBACK - Exception __dict__:", e.__dict__)
+        except Exception:
+            pass
         return f"<p>Error adding account: {e}</p><p><a href='/'>Go to homepage</a></p>"
 
 # --- Route to delete a user ---
