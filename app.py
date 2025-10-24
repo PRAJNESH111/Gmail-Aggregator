@@ -125,6 +125,10 @@ def oauth2callback():
         email_addr = service.users().getProfile(userId="me").execute()["emailAddress"]
 
         token_path = TOKENS_DIR / f"{email_addr}.json"
+        flow.redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
+        print("flow.redirect_uri on callback:", flow.redirect_uri)
+        print("request.url:", request.url)
+        print("X-Forwarded-Proto:", request.headers.get("X-Forwarded-Proto"))
         with open(token_path, "w") as f:
             f.write(creds.to_json())
         return f"""<p>Successfully added account: {email_addr}</p><p><a href='/'>Go to homepage</a></p>"""
