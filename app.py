@@ -107,20 +107,16 @@ def index():
     return send_file("frontend.html")
 
 # --- Route for adding a new user ---
+# /add_user
 @app.route("/add_user")
 def add_user():
     try:
         credentials = get_oauth_credentials()
         flow = InstalledAppFlow.from_client_config(credentials, SCOPES)
-
-        # Use exact redirect URI from environment (must match Google Cloud Console)
         redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
-        if not redirect_uri:
-            return "<p>GOOGLE_REDIRECT_URI not set</p>", 500
-
         flow.redirect_uri = redirect_uri
-        print("ADD_USER - using redirect_uri:", flow.redirect_uri)
-
+        print("ADD_USER - flow.redirect_uri:", flow.redirect_uri)
+        print("ADD_USER - client_id used:", credentials["web"]["client_id"])
         authorization_url, state = flow.authorization_url(
             access_type="offline",
             include_granted_scopes="true",
@@ -129,6 +125,7 @@ def add_user():
         print("ADD_USER - authorization_url:", authorization_url)
         return redirect(authorization_url)
     except Exception as e:
+        import traceback; traceback.print_exc()
         return f"<p>Error setting up OAuth: {e}</p><p><a href='/'>Go to homepage</a></p>"
 
 # --- Route for OAuth2 callback ---
