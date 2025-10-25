@@ -141,7 +141,7 @@ def oauth2callback():
         print("CALLBACK - request.url:", request.url)
         print("CALLBACK - request.headers X-Forwarded-Proto:", request.headers.get("X-Forwarded-Proto"))
         print("CALLBACK - client_id used:", credentials["web"]["client_id"])
-    print("ENV CHECK:", os.getenv("GOOGLE_CLIENT_ID")[:15], os.getenv("GOOGLE_REDIRECT_URI"))
+        print("ENV CHECK:", os.getenv("GOOGLE_CLIENT_ID")[:15], os.getenv("GOOGLE_REDIRECT_URI"))
 
         authorization_response = request.url
         flow.fetch_token(authorization_response=authorization_response)
