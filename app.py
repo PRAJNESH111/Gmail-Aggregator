@@ -9,7 +9,8 @@ from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from concurrent.futures import ThreadPoolExecutor
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
+
 from googleapiclient.discovery import build
 
 from gmail_client import build_service_from_token, fetch_unread, get_account_email, SCOPES
@@ -112,21 +113,22 @@ def index():
 def add_user():
     try:
         credentials = get_oauth_credentials()
-        flow = InstalledAppFlow.from_client_config(credentials, SCOPES)
-        redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
-        flow.redirect_uri = redirect_uri
-        print("ADD_USER - flow.redirect_uri:", flow.redirect_uri)
-        print("ADD_USER - client_id used:", credentials["web"]["client_id"])
+        flow = Flow.from_client_config(credentials, scopes=SCOPES)
+        flow.redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
+
         authorization_url, state = flow.authorization_url(
             access_type="offline",
             include_granted_scopes="true",
             prompt="consent"
         )
-        print("ADD_USER - authorization_url:", authorization_url)
+
+        session["state"] = state  # store state if needed
         return redirect(authorization_url)
+
     except Exception as e:
         import traceback; traceback.print_exc()
         return f"<p>Error setting up OAuth: {e}</p><p><a href='/'>Go to homepage</a></p>"
+
 
 # --- Route for OAuth2 callback ---
 # /oauth2callback
@@ -134,14 +136,8 @@ def add_user():
 def oauth2callback():
     try:
         credentials = get_oauth_credentials()
-        flow = InstalledAppFlow.from_client_config(credentials, SCOPES)
-        redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
-        flow.redirect_uri = redirect_uri
-        print("CALLBACK - flow.redirect_uri:", flow.redirect_uri)
-        print("CALLBACK - request.url:", request.url)
-        print("CALLBACK - request.headers X-Forwarded-Proto:", request.headers.get("X-Forwarded-Proto"))
-        print("CALLBACK - client_id used:", credentials["web"]["client_id"])
-        print("ENV CHECK:", os.getenv("GOOGLE_CLIENT_ID")[:15], os.getenv("GOOGLE_REDIRECT_URI"))
+        flow = Flow.from_client_config(credentials, scopes=SCOPES)
+        flow.redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
 
         authorization_response = request.url
         flow.fetch_token(authorization_response=authorization_response)
@@ -151,18 +147,15 @@ def oauth2callback():
         email_addr = service.users().getProfile(userId="me").execute()["emailAddress"]
 
         token_path = TOKENS_DIR / f"{email_addr}.json"
-        print("CALLBACK - Saving token to:", token_path)
         with open(token_path, "w") as f:
             f.write(creds.to_json())
-        print("CALLBACK - Saved tokens files:", [p.name for p in TOKENS_DIR.glob("*.json")])
-        return f"<p>Successfully added account: {email_addr}</p><p><a href='/'>Go to homepage</a></p>"
+
+        return f"<p>✅ Successfully added account: {email_addr}</p><p><a href='/'>Go to homepage</a></p>"
+
     except Exception as e:
         import traceback; traceback.print_exc()
-        try:
-            print("CALLBACK - Exception __dict__:", e.__dict__)
-        except Exception:
-            pass
         return f"<p>Error adding account: {e}</p><p><a href='/'>Go to homepage</a></p>"
+
 
 # --- Route to delete a user ---
 @app.route("/delete_user", methods=["POST"])
