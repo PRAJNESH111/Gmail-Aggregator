@@ -6,3 +6,14 @@ google-auth-httplib2==0.1.1
 google-api-python-client==2.108.0
 gunicorn==21.2.0
 python-dotenv==1.0.0
+
+Flask
+flask-cors
+gunicorn
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+requests
+python-dotenv
+
