@@ -112,9 +112,22 @@ def index():
 @app.route("/add_user")
 def add_user():
     try:
-        credentials = get_oauth_credentials()
-        flow = Flow.from_client_config(credentials, scopes=SCOPES)
-        flow.redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
+        flow = Flow.from_client_config(
+            {
+                "web": {
+                    "client_id": os.environ["GOOGLE_CLIENT_ID"],
+                    "project_id": "gmail-aggregator",
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
+                    "redirect_uris": [os.environ["GOOGLE_REDIRECT_URI"]],
+                }
+            },
+            scopes=SCOPES,
+        )
+
+        flow.redirect_uri = os.environ["GOOGLE_REDIRECT_URI"]
 
         authorization_url, state = flow.authorization_url(
             access_type="offline",
@@ -122,12 +135,13 @@ def add_user():
             prompt="consent"
         )
 
-        session["state"] = state  # store state if needed
+        session["state"] = state
         return redirect(authorization_url)
 
     except Exception as e:
         import traceback; traceback.print_exc()
-        return f"<p>Error setting up OAuth: {e}</p><p><a href='/'>Go to homepage</a></p>"
+        return f"<p>Error adding account: {e}</p><p><a href='/'>Go to homepage</a></p>"
+
 
 
 # --- Route for OAuth2 callback ---
