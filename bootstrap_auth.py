@@ -1,7 +1,8 @@
 # bootstrap_auth.py
 import os
 from pathlib import Path
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
+
 from googleapiclient.discovery import build
 from gmail_client import SCOPES
 
