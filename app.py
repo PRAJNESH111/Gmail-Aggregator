@@ -213,15 +213,12 @@ if __name__ == "__main__":
   debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
   
   if debug:
-    # Development mode - check if SSL certificates exist
-    if os.path.exists('cert.pem') and os.path.exists('key.pem'):
-      app.run(port=port, debug=True, ssl_context=('cert.pem', 'key.pem'))
-    else:
-      # Run without SSL if certificates don't exist
-      app.run(host='127.0.0.1', port=port, debug=True)
+    # Development mode
+    app.run(host='127.0.0.1', port=port, debug=True)
   else:
     # Production mode
     app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
